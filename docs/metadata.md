@@ -52,6 +52,7 @@ See the tables below for all different fields, look at [Target fields](#target-f
 | `use_<script>`                  | Needs to be set to true when the script should be used. (Only for `preinstall`, `postinstall` and `uninstall`) |
 | `skip_symlinking`               | When set to true, the package is not symlinked after installation, preventing the package to be detectable through the PATH. |
 | `revisions`                     | A list of strings containing a description of what changed in each metadata or script revision. |
+| `comments`                      | A list of messages shown before installing this package version.               |
 | `deprecation`                   | Defines when the version deprecates, disables and the reason.                  |
 | `script_args`                   | A table of key-value pairs containing arguments passed to scripts.             |
 | `external_test_files`           | A list of external test files that are needed for executing the test script. These files are automatically downloaded. |
