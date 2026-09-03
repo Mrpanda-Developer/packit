@@ -46,6 +46,10 @@ pub struct UpdateArgs {
     /// Exclude packages when using the `--all` flag, specified with <PACKAGE-NAME> ...
     #[arg(long, requires = "all")]
     exclude: Vec<PackageName>,
+
+    /// Show what would be updated without changing the system
+    #[arg(long, default_value = "false")]
+    dry: bool,
 }
 
 impl HandleCommand for UpdateArgs {
@@ -55,7 +59,7 @@ impl HandleCommand for UpdateArgs {
         let register_dir = PackageRegister::get_path(&config.prefix_directory);
         let mut register = PackageRegister::from(&register_dir).unwrap_or_exit(1);
 
-        let options = InstallerOptions::default();
+        let options = InstallerOptions::default().dry_run(self.dry);
         let installer = Installer::new(&config, &mut register, &manager, options);
 
         // If `--all` is specified use all the updatable pacakges
@@ -104,7 +108,7 @@ impl HandleCommand for UpdateArgs {
                 exit(1);
             }
 
-            let options = InstallerOptions::default();
+            let options = InstallerOptions::default().dry_run(self.dry);
             let mut installer = Installer::new(&config, &mut register, &manager, options);
 
             // Do the update, and in case of an error throw the error, but continue
@@ -121,11 +125,16 @@ impl HandleCommand for UpdateArgs {
                     let styled_message = format!("Successfully updated {} to {}", optional_id.style(), new_package_id.style());
                     println!("{}", styled_message.bold().green());
 
-                    // Save changes
-                    register.save_to(&register_dir).unwrap_or_exit(1);
+                    if !self.dry {
+                        register.save_to(&register_dir).unwrap_or_exit(1);
+                    }
                 },
                 None => println!("{} is up-to-date!", optional_id.name.style()),
             }
+        }
+
+        if self.dry {
+            println!("Dry run complete; no changes were made");
         }
     }
 }

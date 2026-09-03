@@ -65,7 +65,7 @@ impl<'a> Installer<'a> {
     /// Returns an `InstallerError::InstallationCanceled` if the installation is canceled.
     pub fn install(&mut self, optional_id: &OptionalPackageId) -> Result<PackageId> {
         // Check if we can write to the prefix directory
-        if !self.can_write_prefix_dir()? {
+        if !self.options.dry_run && !self.can_write_prefix_dir()? {
             return Err(InstallerError::PermissionsError);
         }
 
@@ -188,6 +188,22 @@ impl<'a> Installer<'a> {
 
         // Return early if the package has been installed by another node in the sequence (duplicates can exist)
         if self.register.get_package_version(&package_id).is_some() {
+            return Ok(());
+        }
+
+        if self.options.dry_run {
+            let source_repository = self.config.repositories.get(&install_meta.repository_id).expect("Expected repository in config");
+            let active = self.options.skip_active || self.register.get_package(&package_id.name).is_none();
+            self.register.add_package(
+                &install_meta.package_metadata,
+                &install_meta.version_metadata,
+                dependencies,
+                source_repository,
+                &install_directory,
+                false,
+                active,
+                use_prebuild,
+            );
             return Ok(());
         }
 
@@ -584,7 +600,7 @@ impl<'a> Installer<'a> {
     /// or an `InstallerError::DependencyError` error if the given package is a dependency.
     pub fn uninstall(&mut self, optional_id: &OptionalPackageId) -> Result<Vec<PackageId>> {
         // Check if we can write to the prefix directory
-        if !self.can_write_prefix_dir()? {
+        if !self.options.dry_run && !self.can_write_prefix_dir()? {
             return Err(InstallerError::PermissionsError);
         }
 
@@ -593,6 +609,10 @@ impl<'a> Installer<'a> {
             return Err(InstallerError::DependencyError {
                 package_name: optional_id.name.clone(),
             });
+        }
+
+        if self.options.dry_run {
+            return self.simulate_uninstall(optional_id);
         }
 
         // This determines the directory to remove. If there are multiple versions and the version is
@@ -604,6 +624,43 @@ impl<'a> Installer<'a> {
         };
 
         Ok(uninstalled)
+    }
+
+    fn simulate_uninstall(&mut self, optional_id: &OptionalPackageId) -> Result<Vec<PackageId>> {
+        let package_ids: Vec<PackageId> = match optional_id.versioned() {
+            Some(package_id) => {
+                if self.register.get_package_version(&package_id).is_none() {
+                    return Err(InstallerError::PackageNotFound {
+                        package_name: package_id.name,
+                        version: Some(package_id.version),
+                    });
+                }
+                vec![package_id]
+            },
+            None => {
+                let versions = self.register.get_all_package_versions(&optional_id.name);
+                if versions.is_empty() {
+                    return Err(InstallerError::PackageNotFound {
+                        package_name: optional_id.name.clone(),
+                        version: None,
+                    });
+                }
+                if versions.len() > 1 {
+                    let question = "Version is not specified, do you wish to uninstall all versions of this package?";
+                    if ask_user(question, QuestionResponse::No)?.is_no_or_invalid() {
+                        return Err(InstallerError::InstallationCanceled {
+                            reason: format!("Prevent uninstall of all {} versions", optional_id.name.style()),
+                        });
+                    }
+                }
+                versions.into_iter().map(|package| package.package_id.clone()).collect()
+            },
+        };
+
+        for package_id in &package_ids {
+            self.register.remove_package_version(package_id);
+        }
+        Ok(package_ids)
     }
 
     /// Uninstalls a specific package. If it is the only installed version the entire package directory is removed as well.
@@ -902,13 +959,22 @@ impl<'a> Installer<'a> {
         // Update dependents to use the new package version
         let symlinker = Symlinker::new(self.config);
         for dependent_id in &dependents {
-            symlinker.switch_dependency(self.register, dependent_id, &old_package_id, new_package_id.version.clone())?;
+            if self.options.dry_run {
+                self.switch_dependency_in_register(dependent_id, &old_package_id, new_package_id.version.clone())?;
+            } else {
+                symlinker.switch_dependency(self.register, dependent_id, &old_package_id, new_package_id.version.clone())?;
+            }
         }
 
         // Set the active and symlinked state for the new package (to the old package state)
         let package = self.register.get_package(&old_package_id.name).expect("Expected old package to still exist");
         if package.active_version == *new_version {
-            symlinker.set_active(self.register, &new_package_id, package.symlinked)?;
+            if self.options.dry_run {
+                let package = self.register.get_package_mut(&new_package_id.name).expect("Expected new package to still exist");
+                package.active_version = new_package_id.version.clone();
+            } else {
+                symlinker.set_active(self.register, &new_package_id, package.symlinked)?;
+            }
         }
 
         print!("The new package version {} has been succesfully installed", new_version.style());
@@ -923,6 +989,30 @@ impl<'a> Installer<'a> {
         }
 
         Ok(Some(new_package_id))
+    }
+
+    fn switch_dependency_in_register(&mut self, package_id: &PackageId, dependency: &PackageId, new_version: Version) -> Result<()> {
+        let new_dependency = PackageId::new(dependency.name.clone(), new_version);
+        match self.register.get_package_version_mut(dependency) {
+            Some(package) => {
+                package.dependents.remove(package_id);
+            },
+            None => return Err(InstallerError::PackageNotFound { package_name: dependency.name.clone(), version: Some(dependency.version.clone()) }),
+        }
+        match self.register.get_package_version_mut(&new_dependency) {
+            Some(package) => {
+                package.dependents.insert(package_id.clone());
+            },
+            None => return Err(InstallerError::PackageNotFound { package_name: new_dependency.name.clone(), version: Some(new_dependency.version.clone()) }),
+        }
+        match self.register.get_package_version_mut(package_id) {
+            Some(package) => {
+                package.dependencies.remove(dependency);
+                package.dependencies.insert(new_dependency);
+                Ok(())
+            },
+            None => Err(InstallerError::PackageNotFound { package_name: package_id.name.clone(), version: Some(package_id.version.clone()) }),
+        }
     }
 
     /// Gets a specific installed package version. If a version is specified that version is used.

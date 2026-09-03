@@ -66,6 +66,10 @@ pub struct InstallArgs {
     /// True to pause the install after the build is completed (to debug builds)
     #[arg(long, default_value = "false")]
     pause_build: bool,
+
+    /// Show what would be installed without changing the system
+    #[arg(long, default_value = "false")]
+    dry: bool,
 }
 
 impl HandleCommand for InstallArgs {
@@ -122,7 +126,8 @@ impl HandleCommand for InstallArgs {
             .verbose(self.verbose)
             .skip_build_test(self.skip_build_test)
             .skip_test(self.skip_test)
-            .pause_build(self.pause_build);
+            .pause_build(self.pause_build)
+            .dry_run(self.dry);
         let mut installer = Installer::new(&config, &mut register, &manager, installer_options);
 
         // Install all packages
@@ -136,7 +141,10 @@ impl HandleCommand for InstallArgs {
             }
         }
 
-        // Save changes
-        register.save_to(&register_dir).unwrap_or_exit(1);
+        if self.dry {
+            println!("Dry run complete; no changes were made");
+        } else {
+            register.save_to(&register_dir).unwrap_or_exit(1);
+        }
     }
 }

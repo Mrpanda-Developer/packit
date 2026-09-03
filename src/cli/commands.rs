@@ -37,6 +37,14 @@ use crate::{
 #[derive(Parser, Debug)]
 #[command(name = "Packit", version, about)]
 #[command(long_about = "The universal package manager, designed to streamline the experience of installing packages on your system")]
+#[command(after_help = r#"Examples:
+    Install the latest version:     pit install package-name
+    Install a specific version:     pit install package-name@1.2.3
+    Search for a package:           pit search package-name
+    Show package information:       pit info package-name
+    List installed packages:        pit list
+    Show help for a command:        pit install --help
+"#)]
 #[command(long_version = concat!(packit_version!(), " (", packit_version_name!(), ")"))]
 pub struct Cli {
     #[command(subcommand)]

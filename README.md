@@ -49,7 +49,7 @@ The Packit repository is licensed under the GNU General Public License v3.0. See
 ## Usage
 The general usage of Packit is: `pit <COMMAND>`.
 
-#### `pit install <PACKAGE-NAME>[@<VERSION>] ... [--build] [--build-all] [--keep-build] [--skip-symlinking] [--skip-active] [--verbose] [--skip-test] [--skip-build-test] [--pause-build]`
+#### `pit install <PACKAGE-NAME>[@<VERSION>] ... [--build] [--build-all] [--keep-build] [--skip-symlinking] [--skip-active] [--verbose] [--skip-test] [--skip-build-test] [--pause-build] [--dry]`
 Installs the specified packages, if a version is given that version will be installed, if not the latest available version will be installed. Multiple packages can be specified by entering multiple names, split by a space.
 <br>
 If the `--build` option is given, the package is build from source, instead of installing a prebuild version.
@@ -61,9 +61,11 @@ If the `--skip-test` option is enabled, Packit tests are skipped.
 If the `--skip-build-test` option is enabled, build tests are skipped.
 If the `--verbose` option is given, extra verbose output is shown, like build output.
 If the `--pause-build` option is enabed, the build is paused after build script execution to debug builds.
+If the `--dry` option is enabled, the dependency resolution and requested operation are simulated without downloading, building, running scripts, changing symlinks, or modifying the package register.
 
-#### `pit uninstall <PACKAGE-NAME>[@<VERSION>] ...`
+#### `pit uninstall <PACKAGE-NAME>[@<VERSION>] ... [--dry]`
 Uninstalls the specified packages, if a version is given that version will be uninstalled, if not, you will be asked if you want to delete all versions of `<PACKAGE-NAME>` in case there are multiple versions installed. Multiple packages can be specified by entering multiple names, split by a space.
+If the `--dry` option is enabled, the uninstall is simulated without running scripts, changing symlinks, removing files, or modifying the package register.
 
 #### `pit list [--updatables] [--active]`
 Lists all the installed packages. If the `--updatables` flag is specified, all updatable packages are listed. If the `--active` flag is specified, only the active package versions are listed.
@@ -71,8 +73,8 @@ Lists all the installed packages. If the `--updatables` flag is specified, all u
 #### `pit search <QUERY> [--regex] [--verbose] [--tree] [--latest] [--target-only]`
 Searches a package with `<QUERY>`. If `--regex` is not enabled, the query is expected to be `<PACKAGE-NAME>[@<VERSION>]` and information based on the package metadata is shown, if the version is given that specific version is searched for. If `--regex` is given, all packages that match the given regular expression query are shown. The `--verbose` flag can be used to show more output. The `--tree` flag can be used to show the tree of a package. Note that the package version also needs to be given in this case and that the latest version is assumed for the dependencies. The `--latest` flag can be used to use the latest version of a specified package, instead of specifying a version. If the `--target-only` flag is enabled with the `--regex` flag, only the packages that are available for the current target are shown.
 
-#### `pit update [<PACKAGE-NAME>[@<VERSION>] ...] [--new-version <NEW-VERSION>] [--all] [--exclude <PACKAGE-NAME> ...]`
-Updates the specified package to the new version, or the latest version if no new version is specified. If multiple packages are specified they are all updated to the latest version (and `--new-version` cannot be used). If multiple versions of the same package are installed, the latest installed version is assumed. The `--new-version` flag can be used to specify the new version to install. The `--all` flag can be used to update all packages (the latest installed version will be updated). The `--exclude` flag can be used to exclude certain packages when using the `--all` flag.
+#### `pit update [<PACKAGE-NAME>[@<VERSION>] ...] [--new-version <NEW-VERSION>] [--all] [--exclude <PACKAGE-NAME> ...] [--dry]`
+Updates the specified package to the new version, or the latest version if no new version is specified. If multiple packages are specified they are all updated to the latest version (and `--new-version` cannot be used). If multiple versions of the same package are installed, the latest installed version is assumed. The `--new-version` flag can be used to specify the new version to install. The `--all` flag can be used to update all packages (the latest installed version will be updated). The `--exclude` flag can be used to exclude certain packages when using the `--all` flag. The `--dry` flag simulates the update without downloading, building, running scripts, changing symlinks, or modifying the package register.
 
 #### `pit info [<PACKAGE-NAME>[@<VERSION>] [-v] [--tree] [--active]]`
 Shows info about the specified installed package. If the `-v` option is given, extra information is shown. If the `--tree` option is enabled, the whole dependency tree is shown. If no arguments are given, information about the current Packit install is shown. The `--active` flag can be used to use the active version of a specified package, instead of specifying a version.

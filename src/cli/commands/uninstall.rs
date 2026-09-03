@@ -27,6 +27,10 @@ pub struct UninstallArgs {
     /// The names of the packages to install, with an optional version specified with `<name>[@version]`
     #[arg(required = true)]
     packages: Vec<OptionalPackageId>,
+
+    /// Show what would be uninstalled without changing the system
+    #[arg(long, default_value = "false")]
+    dry: bool,
 }
 
 impl HandleCommand for UninstallArgs {
@@ -47,7 +51,8 @@ impl HandleCommand for UninstallArgs {
         // Determine the order in which to uninstall the given packages
         let uninstall_order = self.get_uninstall_order(&register);
 
-        let mut installer = Installer::new(&config, &mut register, &manager, InstallerOptions::default());
+        let options = InstallerOptions::default().dry_run(self.dry);
+        let mut installer = Installer::new(&config, &mut register, &manager, options);
 
         // Uninstall all specified packages
         for optional_id in &uninstall_order {
@@ -62,8 +67,11 @@ impl HandleCommand for UninstallArgs {
             }
         }
 
-        // Save changes
-        register.save_to(&register_dir).unwrap_or_exit(1);
+        if self.dry {
+            println!("Dry run complete; no changes were made");
+        } else {
+            register.save_to(&register_dir).unwrap_or_exit(1);
+        }
     }
 }
 

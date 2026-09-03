@@ -11,6 +11,7 @@ pub struct InstallerOptions {
     pub skip_test: bool,
     pub skip_build_test: bool,
     pub pause_build: bool,
+    pub dry_run: bool,
 }
 
 impl Default for InstallerOptions {
@@ -25,6 +26,7 @@ impl Default for InstallerOptions {
             skip_test: false,
             skip_build_test: false,
             pause_build: false,
+            dry_run: false,
         }
     }
 }
@@ -75,6 +77,12 @@ impl InstallerOptions {
     /// Sets the `pause_build` field.
     pub fn pause_build(mut self, pause: bool) -> Self {
         self.pause_build = pause;
+        self
+    }
+
+    /// Sets whether installation changes should only be simulated.
+    pub fn dry_run(mut self, dry_run: bool) -> Self {
+        self.dry_run = dry_run;
         self
     }
 }
