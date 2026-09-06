@@ -193,7 +193,10 @@ impl<'a> Installer<'a> {
         let script_args = version_meta.get_script_args(&install_meta.target_bounds)?;
         let target_meta = version_meta.get_target(&install_meta.target_bounds)?;
 
-        if let Some(notice) = target_meta.preinstall_notice.as_ref().or(version_meta.preinstall_notice.as_ref()) {
+        if let Some(notice) = &version_meta.preinstall_notice {
+            println!("{notice}");
+        }
+        if let Some(notice) = &target_meta.preinstall_notice {
             println!("{notice}");
         }
 
