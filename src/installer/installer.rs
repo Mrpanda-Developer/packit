@@ -249,7 +249,7 @@ impl<'a> Installer<'a> {
             println!("{notice}");
         }
 
-        self.determine_active(install_meta, &package_id, target)?;
+        self.determine_active(install_meta, &package_id, target_meta)?;
 
         // Only run the test if the skip test option is false
         if !self.options.skip_test {
