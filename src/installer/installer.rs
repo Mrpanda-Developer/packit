@@ -243,14 +243,11 @@ impl<'a> Installer<'a> {
             println!("{notice}");
         }
 
-        // Get the target information from the package version info
-        let target = target_meta;
-
         self.determine_active(install_meta, &package_id, target)?;
 
         // Only run the test if the skip test option is false
         if !self.options.skip_test {
-            self.execute_test(&package_id, install_meta, &install_directory, &script_args, target)?;
+            self.execute_test(&package_id, install_meta, &install_directory, &script_args, target_meta)?;
         }
 
         Ok(())

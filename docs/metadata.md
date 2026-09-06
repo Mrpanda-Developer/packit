@@ -139,8 +139,8 @@ Targets are specified as `[targets.<bounds>]`, where bounds specify the supporte
 | `skip_symlinking`               | When set to true, the package is not symlinked after installation, preventing the package to be detectable through the PATH. Overrides the value defined in the global field. |
 | `<script-type>_script`          | Defines the name of the script to use instead of the default script name.            |
 | `use_<script>`                  | Overwrites the global `use_<script>` field. (Only for `preinstall`, `postinstall` and `uninstall`) |
-| `preinstall_notice`             | Overrides the global preinstall notice for the target.                               |
-| `postinstall_notice`            | Overrides the global postinstall notice for the target.                              |
+| `preinstall_notice`             | If a notice is present on both the version and the target, both notices are shown, with the version notice first and the target-specific notice after it.|
+| `postinstall_notice`            | If a notice is present on both the version and the target, both notices are shown, with the version notice first and the target-specific notice after it.|
 | `script_args`                   | A table of key-value pairs containing arguments passed to scripts, additional to the args defined in the global field. |
 | `source`                        | Defines which source to use, required when multiple sources are defined.             |
 | `external_test_files`           | A list of external test files that are needed for executing the test script for this target, additional to the files specified in the global field. These files are automatically downloaded. |
