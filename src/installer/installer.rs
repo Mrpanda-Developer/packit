@@ -242,7 +242,10 @@ impl<'a> Installer<'a> {
 
         self.execute_postinstall(&package_id, install_meta, &install_directory, &script_args)?;
 
-        if let Some(notice) = target_meta.postinstall_notice.as_ref().or(version_meta.postinstall_notice.as_ref()) {
+        if let Some(notice) = &version_meta.postinstall_notice {
+            println!("{notice}");
+        }
+        if let Some(notice) = &target_meta.postinstall_notice {
             println!("{notice}");
         }
 
