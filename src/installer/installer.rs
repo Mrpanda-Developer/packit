@@ -242,18 +242,18 @@ impl<'a> Installer<'a> {
 
         self.execute_postinstall(&package_id, install_meta, &install_directory, &script_args)?;
 
-        if let Some(notice) = &version_meta.postinstall_notice {
-            println!("{notice}");
-        }
-        if let Some(notice) = &target_meta.postinstall_notice {
-            println!("{notice}");
-        }
-
         self.determine_active(install_meta, &package_id, target_meta)?;
 
         // Only run the test if the skip test option is false
         if !self.options.skip_test {
             self.execute_test(&package_id, install_meta, &install_directory, &script_args, target_meta)?;
+        }
+
+        if let Some(notice) = &version_meta.postinstall_notice {
+            println!("{notice}");
+        }
+        if let Some(notice) = &target_meta.postinstall_notice {
+            println!("{notice}");
         }
 
         Ok(())

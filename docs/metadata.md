@@ -53,9 +53,9 @@ See the tables below for all different fields, look at [Target fields](#target-f
 | `skip_symlinking`               | When set to true, the package is not symlinked after installation, preventing the package to be detectable through the PATH. |
 | `revisions`                     | A list of strings containing a description of what changed in each metadata or script revision. |
 | `preinstall_notice`             | A message shown immediately before the preinstall step.                                         |
-| `postinstall_notice`            | A message shown immediately after the postinstall step.                                         |
-| `deprecation`                   | Defines when the version deprecates, disables and the reason.                  |
-| `script_args`                   | A table of key-value pairs containing arguments passed to scripts.             |
+| `postinstall_notice`            | A message shown immediately after successfully completing the installation.                     |
+| `deprecation`                   | Defines when the version deprecates, disables and the reason.                                   |
+| `script_args`                   | A table of key-value pairs containing arguments passed to scripts.                              |
 | `external_test_files`           | A list of external test files that are needed for executing the test script. These files are automatically downloaded. |
 
 > Note that for the `license` field we try to be as accurate as possible. However sometimes the specific version of a license can be difficult to find, so it could be wrong. In such a case please create an issue on Packit.

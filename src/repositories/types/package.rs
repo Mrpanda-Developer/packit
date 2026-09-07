@@ -17,7 +17,6 @@ use crate::{
 pub struct PackageMeta {
     pub name: PackageName,
     pub description: String,
-
     pub homepage: Option<String>,
     pub versions: Vec<Version>,
     pub required_packit_version: Option<Version>,
